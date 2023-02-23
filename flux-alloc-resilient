@@ -53,7 +53,7 @@ def do_calc_size(arg):
         sys.exit(1)
 
     total_needed = total_needed_nodes(app, spare, kary)
-    print(f'calc_size with {arg} and kary {kary} returned {total_needed}')
+    print(f'request {total_needed} nodes by providing flux mini arguments\n\t-N{total_needed} --broker-opts=-Stbon.topo=kary:{kary}')
 
 
 def do_exclude_list(arg):
