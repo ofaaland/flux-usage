@@ -6,13 +6,27 @@ import sys
 import flux
 import subprocess
 
+usage_explanation=" \
+Some nodes in a flux allocation are involved in managing the allocation itself. \
+If those nodes fail during an allocation, additional nodes will be lost and the \
+allocation may fail entirely. \
+\
+Allocating one or more extra nodes, and then running user workloads on \
+non-critical nodes, allows the job to be resumed after a node failure. \
+\
+This script helps calculate how many extra nodes must be allocated, and then \
+within the allocation helps identify the critical nodes.  It provides the flux \
+command-line syntax for allocating the nodes in a way that controls the number \
+of critical nodes, and the syntax for avoiding the cirical nodes when launching \
+jobs within it."
+
 """
 Nodes the user wants
 app = nodes user needs for their app to run
 spare = spare nodes to allow re-launching after job failure
 
 Infrastructure
-routers = TBON (tree-based overlay network) router nodes (if they die, allocation dies)
+routers = TBON (tree-based overlay network) interior nodes (if they die, child nodes are lost to the allocation as well)
 fanout = branching factor of TBON, determines number of router nodes
 """
 
@@ -72,8 +86,7 @@ def do_exclude_list(arg):
     # --requires=-host:HOSTLIST
     print(f'run application on non-critical nodes by providing flux mini argument\n\t--requires=-host:{crit_hosts}')
 
-parser = argparse.ArgumentParser(
-    description = 'Helper for resilient flux allocations')
+parser = argparse.ArgumentParser(description=usage_explanation)
 subparsers = parser.add_subparsers(help='sub-command help')
 
 # calc_size subcommand
