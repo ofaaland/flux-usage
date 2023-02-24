@@ -3,6 +3,8 @@
 import math
 import argparse
 import sys
+import flux
+import subprocess
 
 """
 Nodes the user wants
@@ -61,7 +63,14 @@ def do_calc_size(arg):
 
 
 def do_exclude_list(arg):
-    print(f'doing exclude_list with {arg}')
+    h = flux.Flux()
+    # get critical ranks and translate that to host names
+    # crit_ranks = subprocess.getoutput(['flux', 'getattr', 'broker.critical-ranks'])
+    crit_ranks = h.attr_get('broker.critical-ranks')
+    crit_hosts = subprocess.getoutput(f'flux overlay lookup {crit_ranks}')
+    # exclude nodes with
+    # --requires=-host:HOSTLIST
+    print(f'run application on non-critical nodes by providing flux mini argument\n\t--requires=-host:{crit_hosts}')
 
 parser = argparse.ArgumentParser(
     description = 'Helper for resilient flux allocations')
