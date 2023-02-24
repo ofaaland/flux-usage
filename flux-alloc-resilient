@@ -38,7 +38,11 @@ for want in apps:
 """
 
 def do_calc_size(arg):
-    kary=256
+    try:
+        fanout = int(arg.fanout)
+    except ValueError:
+        print(f'error: --fanout ({arg.fanout}) must be an integer')
+        sys.exit(1)
 
     try:
         app = int(arg.app)
@@ -52,8 +56,8 @@ def do_calc_size(arg):
         print(f'error: --spare ({arg.spare}) must be an integer')
         sys.exit(1)
 
-    total_needed = total_needed_nodes(app, spare, kary)
-    print(f'request {total_needed} nodes by providing flux mini arguments\n\t-N{total_needed} --broker-opts=-Stbon.topo=kary:{kary}')
+    total_needed = total_needed_nodes(app, spare, fanout)
+    print(f'request {total_needed} nodes by providing flux mini arguments\n\t-N{total_needed} --broker-opts=-Stbon.topo=kary:{fanout}')
 
 
 def do_exclude_list(arg):
@@ -66,7 +70,8 @@ subparsers = parser.add_subparsers(help='sub-command help')
 # calc_size subcommand
 parser_calc = subparsers.add_parser('calc_size', help='calculate allocation size including flux redundancy')
 parser_calc.add_argument('-a', '--app', required=True, help='count of nodes app needs')
-parser_calc.add_argument('-s', '--spare', required=True, help='count of spare nodes for re-running after node fail')
+parser_calc.add_argument('-s', '--spare', default=2, help='count of spare nodes for re-running after node fail')
+parser_calc.add_argument('-f', '--fanout', default=256, help='flux overlay net fanout')
 parser_calc.set_defaults(func=do_calc_size)
 
 # exclude_list subcommand
