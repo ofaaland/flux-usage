@@ -79,7 +79,7 @@ def do_calc_size(arg):
 def do_exclude_list(arg):
     h = flux.Flux()
     # get critical ranks and translate that to host names
-    # crit_ranks = subprocess.getoutput(['flux', 'getattr', 'broker.critical-ranks'])
+    # in shell, "flux getattr broker.critical-ranks"
     crit_ranks = h.attr_get('broker.critical-ranks')
     crit_hosts = subprocess.getoutput(f'flux overlay lookup {crit_ranks}')
     # exclude nodes with
@@ -90,14 +90,14 @@ parser = argparse.ArgumentParser(description=usage_explanation)
 subparsers = parser.add_subparsers(help='sub-command help')
 
 # calc_size subcommand
-parser_calc = subparsers.add_parser('calc_size', help='calculate allocation size including flux redundancy')
+parser_calc = subparsers.add_parser('calc_size', help='Calculate allocation size including flux redundancy.')
 parser_calc.add_argument('-a', '--app', required=True, help='count of nodes app needs')
 parser_calc.add_argument('-s', '--spare', default=2, help='count of spare nodes for re-running after node fail')
 parser_calc.add_argument('-f', '--fanout', default=256, help='flux overlay net fanout')
 parser_calc.set_defaults(func=do_calc_size)
 
 # exclude_list subcommand
-parser_exclude = subparsers.add_parser('exclude_list', help='syntax to avoid running on flux-critical nodes')
+parser_exclude = subparsers.add_parser('exclude_list', help='Provide syntax to avoid running on flux-critical nodes.  Must be run within allocation.')
 parser_exclude.set_defaults(func=do_exclude_list)
 
 args = parser.parse_args()
