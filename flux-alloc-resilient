@@ -13,15 +13,15 @@ spare = spare nodes to allow re-launching after job failure
 
 Infrastructure
 routers = TBON (tree-based overlay network) router nodes (if they die, allocation dies)
-kary = branching factor of TBON, determines number of router nodes
+fanout = branching factor of TBON, determines number of router nodes
 """
 
 # this math is not quite right, but close enough for now
-def total_needed_nodes(app, spare, kary=2):
-    if kary >= (app + spare) or kary == 0:
+def total_needed_nodes(app, spare, fanout=2):
+    if fanout >= (app + spare) or fanout == 0:
         routers = 1
     else:
-        routers = math.floor( (app + spare -1) / (kary - 1) )
+        routers = math.floor( (app + spare -1) / (fanout - 1) )
         routers = max(routers, 1)
 
     return routers + spare + app
@@ -29,14 +29,14 @@ def total_needed_nodes(app, spare, kary=2):
 """
 apps = [1,3,5,5,100,200,700]
 spares = [1,2,3]
-karys = [0,2,128,256]
+fanouts = [0,2,128,256]
 
 for want in apps:
     for sp in spares:
-        for k in karys:
-            total_needed = total_needed_nodes(want, sp, k)
+        for f in fanouts:
+            total_needed = total_needed_nodes(want, sp, f)
             router = total_needed - want - sp
-            print(f'needed {want+sp} kary {k} router {router}')
+            print(f'needed {want+sp} fanout {f} router {router}')
 """
 
 def do_calc_size(arg):
