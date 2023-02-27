@@ -15,10 +15,9 @@ Allocating one or more extra nodes, and then running user workloads on \
 non-critical nodes, allows the job to be resumed after a node failure. \
 \
 This script helps calculate how many extra nodes must be allocated, and then \
-within the allocation helps identify the critical nodes.  It provides the flux \
-command-line syntax for allocating the nodes in a way that controls the number \
-of critical nodes, and the syntax for avoiding the cirical nodes when launching \
-jobs within it."
+within the allocation drains the flux-critical nodes.  By draining the critical \
+nodes, failures induced by the job workload will isolate failures to non-critical \
+nodes and allow the job to be re-launched."
 
 """
 Nodes the user wants
@@ -76,15 +75,14 @@ def do_calc_size(arg):
     print(f'request {total_needed} nodes by providing flux mini arguments\n\t-N{total_needed} --broker-opts=-Stbon.topo=kary:{fanout}')
 
 
-def do_exclude_list(arg):
+def do_exclude_critical(arg):
     h = flux.Flux()
     # get critical ranks and translate that to host names
     # in shell, "flux getattr broker.critical-ranks"
     crit_ranks = h.attr_get('broker.critical-ranks')
     crit_hosts = subprocess.getoutput(f'flux overlay lookup {crit_ranks}')
-    # exclude nodes with
-    # --requires=-host:HOSTLIST
-    print(f'run application on non-critical nodes by providing flux mini argument\n\t--requires=-host:{crit_hosts}')
+    subprocess.run(f'flux resource drain {crit_ranks}')
+    print(f'critical nodes {crit_hosts} will now be avoided by "flux mini run" et al.\nTo make these nodes available again run:\n\tflux resource undrain {crit_hosts}')
 
 parser = argparse.ArgumentParser(description=usage_explanation)
 subparsers = parser.add_subparsers(help='sub-command help')
@@ -96,9 +94,9 @@ parser_calc.add_argument('-s', '--spare', default=2, help='count of spare nodes 
 parser_calc.add_argument('-f', '--fanout', default=256, help='flux overlay net fanout')
 parser_calc.set_defaults(func=do_calc_size)
 
-# exclude_list subcommand
-parser_exclude = subparsers.add_parser('exclude_list', help='Provide syntax to avoid running on flux-critical nodes.  Must be run within allocation.')
-parser_exclude.set_defaults(func=do_exclude_list)
+# exclude_critical subcommand
+parser_exclude = subparsers.add_parser('exclude_critical', help='Drain flux-critical nodes so they are avoided when running apps.  Execute within the allocation.')
+parser_exclude.set_defaults(func=do_exclude_critical)
 
 args = parser.parse_args()
 
